@@ -14,9 +14,11 @@ And I added an extra cnn architecture to it - resnet50<br>
 # Train on your own dataset
 1.generate annotation file, format as follows:<br>
 image_path x1,y1,x2,y2,cls_id x1,y1,x2,y2,cls_id<br>
+
 2.download pre-trained weights of vgg or resnet and put it into directory "weights"<br>
 vgg - https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels.h5<br>
 resnet - https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5<br>
+
 3.run train.py<br>
 
 # Testing
