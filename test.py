@@ -2,26 +2,26 @@ import numpy as np
 import cv2
 from keras.layers import Input
 from keras import Model
-import pickle
 from utils.nms import apply_regr, non_max_suppression_fast, rpn_to_roi
 from keras import backend as K
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from utils.image_processing import format_img, get_real_coordinates
+import pickle
 
 
-def init_config(net):
+def init_config(net, weights):
     cfg_path = 'config/res_config.pickle' if net == 'res' else 'config/vgg_config.pickle'
     with open(cfg_path, 'rb') as f_in:
         cfg = pickle.load(f_in)
     cfg.use_horizontal_flips = False
     cfg.use_vertical_flips = False
     cfg.rot_90 = False
-    cfg.model_path = 'weights/model_frcnn_resnet50.hdf5' if net == 'res' else 'weights/model_frcnn_vgg16.hdf5'
+    cfg.model_path = weights
     return cfg
 
 
-def test(net, image_path, thresh=0.3):
-    cfg = init_config(net)
+def test(net, weights, image_path, thresh=0.7):
+    cfg = init_config(net, weights)
     if net == 'res':
         num_features = 1024
         from layers.resnet50 import nn_base, rpn_layer, classifier_layer
@@ -119,25 +119,42 @@ def test(net, image_path, thresh=0.3):
             bboxes[cls_name].append(
                 [cfg.rpn_stride * x, cfg.rpn_stride * y, cfg.rpn_stride * (x + w), cfg.rpn_stride * (y + h)])
             probs[cls_name].append(np.max(P_cls[0, ii, :]))
+
     show_result(image_path, bboxes, probs, ratio)
 
 
 def show_result(image_path, bboxes, probs, ratio):
     image = Image.open(image_path)
     draw = ImageDraw.Draw(image)
+    font = ImageFont.truetype(font='FiraMono-Medium.otf',
+                              size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
+    thickness = (image.size[0] + image.size[1]) // 300
     for key in bboxes:
         bbox = np.array(bboxes[key])
 
         new_boxes, new_probs = non_max_suppression_fast(bbox, np.array(probs[key]), overlap_thresh=0.2)
         for jk in range(new_boxes.shape[0]):
             (x1, y1, x2, y2) = new_boxes[jk, :]
-            (real_x1, real_y1, real_x2, real_y2) = get_real_coordinates(ratio, x1, y1, x2, y2)
-            draw.rectangle((real_x1, real_y1, real_x2, real_y2), outline=(255, 255, 0), fill=None)
+            (left, top, right, bottom) = get_real_coordinates(ratio, x1, y1, x2, y2)
+            label = '{} {:.2f}'.format(key, new_probs[jk])
 
+            # draw frame
+            draw.rectangle(
+                [left, top, right, bottom],
+                outline=(255, 255, 255), width=thickness)
+
+            # draw text
+            label_size = draw.textsize(label, font)
+            text_origin = np.array([left, top - label_size[1]])
+            draw.rectangle(
+                [tuple(text_origin), tuple(text_origin + label_size)],
+                fill=(255, 255, 255))
+            draw.text(text_origin, label, fill=(0, 0, 0), font=font)
     del draw
     image.show()
+    # image.save('results/pokemon_result_02.png', 'PNG')
 
 
 if __name__ == '__main__':
-    # test(net='res', image_path='testing_images/DJI_0043/DJI_0043-0-0.png')
-    test(net='vgg', image_path='testing_images/DJI_0043/DJI_0043-0-0.png')
+    # test(net='vgg', weights='weights/tobacco_vgg.hdf5', image_path='testing_images/DJI_0082/DJI_0082-0-512.png')
+    test(net='vgg', weights='weights/pokemon_vgg.hdf5', image_path='pokemon_test/8.jpg')
