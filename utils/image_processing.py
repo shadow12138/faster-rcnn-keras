@@ -88,7 +88,7 @@ def augment(img_data, config, augment=True):
     return img_data_aug, img
 
 
-def get_data(annotation_file_path):
+def get_data(annotation_file_path, class_mapping):
     """
     annotation_file should be like the following:
     image_path x1,y1,x2,y2,cls1_id x1,y1,x2,y2,cls2_id
@@ -97,7 +97,6 @@ def get_data(annotation_file_path):
     :return:
     """
 
-    class_mapping = {'bg': 1, 'tobacco': 0}
     classes_count = {}
     class_mapping2 = {}
     for key in class_mapping:
@@ -109,7 +108,7 @@ def get_data(annotation_file_path):
     for line in file.readlines():
         line = line.strip().split()
         bboxes = []
-        for bbox in line[1:]:
+        for bbox in line[2:]:
             x1, y1, x2, y2, cls_id = map(int, bbox.split(','))
             cls = class_mapping2[cls_id]
             bboxes.append({'class': cls, 'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2})
@@ -117,8 +116,8 @@ def get_data(annotation_file_path):
 
         all_data.append({
             'filepath': line[0],
-            'height': 512,
-            'width': 512,
+            'height': int(line[1][0]),
+            'width': int(line[1][1]),
             'bboxes': bboxes
         })
     file.close()
