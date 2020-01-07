@@ -52,6 +52,7 @@ class Config:
         self.classifier_min_overlap = 0.1
         self.classifier_max_overlap = 0.5
 
+        # TODO
         # should be replace with your own dataset's mapping
         # with bg as the number of classes
         # for example, if your dataset has three classes

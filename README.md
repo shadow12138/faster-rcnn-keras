@@ -28,7 +28,11 @@ vgg - https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vg
 
 resnet - https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5<br>
 
-**3**. run train.py<br>
+**3**. set your own class_mapping in config.py<br>
+for example, if your dataset has three classes<br>
+your class_mapping should go like this {'class1': 0, 'class2': 1, 'class3': 2, 'bg':3}<br>
+
+**4**. run train.py<br>
 
 # Testing
 run test.py
